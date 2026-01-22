@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+:root {
+  --background-primary: #0d1117;
+  --background-secondary: #161b22;
+  --background-tertiary: #21262d;
+  --border-primary: #30363d;
+  --border-secondary: #21262d;
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent-green: #3fb950;
+  --accent-red: #f85149;
+  --accent-blue: #58a6ff;
+  --accent-yellow: #d29922;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) var(--background-secondary);
+}
+
+/* Selection color */
+::selection {
+  background: var(--accent-blue);
+  color: var(--text-primary);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Table hover animation */
+@layer utilities {
+  .hover-row {
+    @apply transition-colors duration-150 ease-in-out;
+  }
+}
+
+/* Price change animations */
+@keyframes flash-green {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(63, 185, 80, 0.2);
+  }
+}
+
+@keyframes flash-red {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(248, 81, 73, 0.2);
+  }
+}
+
+.flash-green {
+  animation: flash-green 0.5s ease-in-out;
+}
+
+.flash-red {
+  animation: flash-red 0.5s ease-in-out;
+}
+
+/* Loading skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--background-tertiary) 25%,
+    var(--border-primary) 50%,
+    var(--background-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Number formatting */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

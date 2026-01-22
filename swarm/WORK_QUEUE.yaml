@@ -1,0 +1,377 @@
+queue_id: xch-dashboard-enhancement-001
+project: xch-dashboard
+created_by: mau-orchestrator-001
+created_at: 2026-01-21T00:00:00Z
+last_updated: 2026-01-21T00:00:00Z
+
+tasks:
+  # =============================================================================
+  # BATCH 1: Contracts Foundation (COMPLETED BY ORCHESTRATOR)
+  # =============================================================================
+  - id: task-001
+    module: contracts
+    phase: implementation
+    description: "Extend contracts/types.ts with Chart, TokenDetail, Watchlist, Pagination, AdvancedFilters, DexTradeLink, ViewMode types"
+    status: completed
+    completed_by: mau-orchestrator-001
+    completed_at: 2026-01-21T00:00:00Z
+    priority: critical
+    estimated_complexity: M
+    dependencies: []
+    contract_path: /contracts/types.ts
+    output_path: /contracts/types.ts
+
+  # =============================================================================
+  # BATCH 2: Backend Implementation (PARALLEL WORKERS A & B)
+  # =============================================================================
+
+  # Worker A - backend-specialist-1
+  - id: task-002
+    module: chart-data
+    phase: implementation
+    description: "Create lib/chart-data.ts - fetchChartData function, derive OHLC from market data"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /lib/chart-data.ts
+    worker_assignment: backend-specialist-1
+
+  - id: task-003
+    module: chart-api
+    phase: implementation
+    description: "Create app/api/charts/[tokenId]/route.ts - API endpoint for chart data"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-002]
+    contract_path: /contracts/types.ts
+    output_path: /app/api/charts/[tokenId]/route.ts
+    worker_assignment: backend-specialist-1
+
+  - id: task-004
+    module: dex-links
+    phase: implementation
+    description: "Create lib/dex-links.ts - getDexieSwapLink, getTibetSwapLink, getAllTradeLinks"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /lib/dex-links.ts
+    worker_assignment: backend-specialist-1
+
+  # Worker B - backend-specialist-2
+  - id: task-005
+    module: watchlist
+    phase: implementation
+    description: "Create lib/watchlist.ts + hooks/useWatchlist.ts - localStorage persistence"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /lib/watchlist.ts
+    worker_assignment: backend-specialist-2
+
+  - id: task-006
+    module: advanced-filters
+    phase: implementation
+    description: "Create hooks/useAdvancedFilters.ts - filter by price/volume/change ranges"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /hooks/useAdvancedFilters.ts
+    worker_assignment: backend-specialist-2
+
+  - id: task-007
+    module: pagination
+    phase: implementation
+    description: "Create hooks/usePagination.ts - generic pagination hook"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /hooks/usePagination.ts
+    worker_assignment: backend-specialist-2
+
+  # =============================================================================
+  # BATCH 3: Frontend Implementation (PARALLEL WORKERS C & D)
+  # =============================================================================
+
+  # Worker C - frontend-specialist-1
+  - id: task-008
+    module: dashboard-integration
+    phase: implementation
+    description: "Modify components/Dashboard.tsx - integrate filters, pagination, view switcher"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: L
+    dependencies: [task-005, task-006, task-007]
+    contract_path: /contracts/types.ts
+    output_path: /components/Dashboard.tsx
+    worker_assignment: frontend-specialist-1
+
+  - id: task-009
+    module: filter-panel
+    phase: implementation
+    description: "Create components/FilterPanel.tsx - advanced filter UI"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-006]
+    contract_path: /contracts/types.ts
+    output_path: /components/FilterPanel.tsx
+    worker_assignment: frontend-specialist-1
+
+  - id: task-010
+    module: pagination-controls
+    phase: implementation
+    description: "Create components/PaginationControls.tsx - page navigation"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-007]
+    contract_path: /contracts/types.ts
+    output_path: /components/PaginationControls.tsx
+    worker_assignment: frontend-specialist-1
+
+  - id: task-011
+    module: view-mode-switcher
+    phase: implementation
+    description: "Create components/ViewModeSwitcher.tsx - table/card toggle"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/ViewModeSwitcher.tsx
+    worker_assignment: frontend-specialist-1
+
+  - id: task-012
+    module: token-card
+    phase: implementation
+    description: "Create components/TokenCard.tsx + components/TokenGrid.tsx - mobile cards"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/TokenCard.tsx
+    worker_assignment: frontend-specialist-1
+
+  - id: task-013
+    module: token-table-update
+    phase: implementation
+    description: "Modify components/TokenTable.tsx + TokenRow.tsx - responsive columns, click navigation"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/TokenTable.tsx
+    worker_assignment: frontend-specialist-1
+
+  # Worker D - frontend-specialist-2
+  - id: task-014
+    module: token-detail-page
+    phase: implementation
+    description: "Create app/tokens/[symbol]/page.tsx - token detail route"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: L
+    dependencies: [task-002, task-004]
+    contract_path: /contracts/types.ts
+    output_path: /app/tokens/[symbol]/page.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-015
+    module: token-detail-header
+    phase: implementation
+    description: "Create components/TokenDetailHeader.tsx - large header with icon/price"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/TokenDetailHeader.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-016
+    module: token-stats
+    phase: implementation
+    description: "Create components/TokenStats.tsx - stats grid"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/TokenStats.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-017
+    module: trading-links
+    phase: implementation
+    description: "Create components/TradingLinks.tsx - Dexie/TibetSwap buttons"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-004]
+    contract_path: /contracts/types.ts
+    output_path: /components/TradingLinks.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-018
+    module: price-chart
+    phase: implementation
+    description: "Create components/PriceChart.tsx - lightweight-charts integration"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: L
+    dependencies: [task-002]
+    contract_path: /contracts/types.ts
+    output_path: /components/PriceChart.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-019
+    module: chart-timeframe-selector
+    phase: implementation
+    description: "Create components/ChartTimeframeSelector.tsx - 1D/7D/1M/1Y/ALL buttons"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-001]
+    contract_path: /contracts/types.ts
+    output_path: /components/ChartTimeframeSelector.tsx
+    worker_assignment: frontend-specialist-2
+
+  - id: task-020
+    module: use-chart-data
+    phase: implementation
+    description: "Create hooks/useChartData.ts - SWR hook for chart data"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: M
+    dependencies: [task-003]
+    contract_path: /contracts/types.ts
+    output_path: /hooks/useChartData.ts
+    worker_assignment: frontend-specialist-2
+
+  # =============================================================================
+  # BATCH 4: Integration (SEQUENTIAL)
+  # =============================================================================
+  - id: task-021
+    module: dependencies
+    phase: integration
+    description: "Install lightweight-charts and swr packages"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-008, task-014]
+    contract_path: null
+    output_path: /package.json
+    worker_assignment: orchestrator
+
+  - id: task-022
+    module: component-exports
+    phase: integration
+    description: "Update components/index.ts with all new component exports"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-008, task-009, task-010, task-011, task-012, task-013, task-015, task-016, task-017, task-018, task-019]
+    contract_path: null
+    output_path: /components/index.ts
+    worker_assignment: orchestrator
+
+  - id: task-023
+    module: hook-exports
+    phase: integration
+    description: "Update hooks/index.ts with all new hook exports"
+    status: available
+    claimed_by: null
+    priority: high
+    estimated_complexity: S
+    dependencies: [task-005, task-006, task-007, task-020]
+    contract_path: null
+    output_path: /hooks/index.ts
+    worker_assignment: orchestrator
+
+  - id: task-024
+    module: build-verification
+    phase: integration
+    description: "Run npm run build and npm run type-check to verify"
+    status: available
+    claimed_by: null
+    priority: critical
+    estimated_complexity: S
+    dependencies: [task-021, task-022, task-023]
+    contract_path: null
+    output_path: null
+    worker_assignment: orchestrator
+
+claims: []
+
+completed:
+  - task_id: task-001
+    agent_id: mau-orchestrator-001
+    completed_at: 2026-01-21T00:00:00Z
+    handoff_path: null
+
+batches:
+  - batch_id: 1
+    name: "Contracts Foundation"
+    status: completed
+    tasks: [task-001]
+    executor: orchestrator
+
+  - batch_id: 2
+    name: "Backend Implementation"
+    status: pending
+    tasks: [task-002, task-003, task-004, task-005, task-006, task-007]
+    parallel_workers:
+      - worker_id: backend-specialist-1
+        tasks: [task-002, task-003, task-004]
+      - worker_id: backend-specialist-2
+        tasks: [task-005, task-006, task-007]
+
+  - batch_id: 3
+    name: "Frontend Implementation"
+    status: pending
+    tasks: [task-008, task-009, task-010, task-011, task-012, task-013, task-014, task-015, task-016, task-017, task-018, task-019, task-020]
+    parallel_workers:
+      - worker_id: frontend-specialist-1
+        tasks: [task-008, task-009, task-010, task-011, task-012, task-013]
+      - worker_id: frontend-specialist-2
+        tasks: [task-014, task-015, task-016, task-017, task-018, task-019, task-020]
+
+  - batch_id: 4
+    name: "Integration"
+    status: pending
+    tasks: [task-021, task-022, task-023, task-024]
+    executor: orchestrator

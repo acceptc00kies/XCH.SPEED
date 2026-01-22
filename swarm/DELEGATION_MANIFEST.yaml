@@ -1,0 +1,151 @@
+orchestrator_id: mau-orchestrator-001
+project: xch-dashboard
+created_at: 2026-01-21T00:00:00Z
+strategy: specialist
+
+delegations:
+  - worker_id: backend-specialist-1
+    worker_type: backend-specialist
+    assigned_modules:
+      - chart-data
+      - chart-api
+      - dex-links
+    contracts:
+      must_implement:
+        - ChartData
+        - ChartDataPoint
+        - DexTradeLink
+      must_respect:
+        - DashboardToken
+        - TokenDetail
+    spawn_config:
+      mode: PEER
+      tasks:
+        - Create lib/chart-data.ts with fetchChartData function
+        - Create app/api/charts/[tokenId]/route.ts API endpoint
+        - Create lib/dex-links.ts with getDexieSwapLink, getTibetSwapLink, getAllTradeLinks
+
+  - worker_id: backend-specialist-2
+    worker_type: backend-specialist
+    assigned_modules:
+      - watchlist
+      - advanced-filters
+      - pagination
+    contracts:
+      must_implement:
+        - WatchlistConfig
+        - UseWatchlistResult
+        - AdvancedFilters
+        - UseAdvancedFiltersResult
+        - PaginationState
+        - UsePaginationResult
+      must_respect:
+        - DashboardToken
+    spawn_config:
+      mode: PEER
+      tasks:
+        - Create lib/watchlist.ts and hooks/useWatchlist.ts
+        - Create hooks/useAdvancedFilters.ts
+        - Create hooks/usePagination.ts
+
+  - worker_id: frontend-specialist-1
+    worker_type: frontend-specialist
+    assigned_modules:
+      - dashboard-integration
+      - filter-panel
+      - pagination-controls
+      - view-mode-switcher
+      - token-card
+      - token-table-update
+    contracts:
+      must_implement:
+        - FilterPanel component
+        - PaginationControls component
+        - ViewModeSwitcher component
+        - TokenCard component
+        - TokenGrid component
+      must_consume:
+        - UseAdvancedFiltersResult
+        - UsePaginationResult
+        - UseWatchlistResult
+        - ViewMode
+    spawn_config:
+      mode: PEER
+      tasks:
+        - Modify components/Dashboard.tsx to integrate filters, pagination, view switcher
+        - Create components/FilterPanel.tsx
+        - Create components/PaginationControls.tsx
+        - Create components/ViewModeSwitcher.tsx
+        - Create components/TokenCard.tsx and components/TokenGrid.tsx
+        - Modify components/TokenTable.tsx and TokenRow.tsx
+
+  - worker_id: frontend-specialist-2
+    worker_type: frontend-specialist
+    assigned_modules:
+      - token-detail-page
+      - token-detail-header
+      - token-stats
+      - trading-links
+      - price-chart
+      - chart-timeframe-selector
+      - use-chart-data
+    contracts:
+      must_implement:
+        - Token detail page route
+        - TokenDetailHeader component
+        - TokenStats component
+        - TradingLinks component
+        - PriceChart component
+        - ChartTimeframeSelector component
+        - useChartData hook
+      must_consume:
+        - TokenDetail
+        - ChartData
+        - DexTradeLink
+        - ChartTimeframe
+    spawn_config:
+      mode: PEER
+      tasks:
+        - Create app/tokens/[symbol]/page.tsx
+        - Create components/TokenDetailHeader.tsx
+        - Create components/TokenStats.tsx
+        - Create components/TradingLinks.tsx
+        - Create components/PriceChart.tsx
+        - Create components/ChartTimeframeSelector.tsx
+        - Create hooks/useChartData.ts
+
+sync_points:
+  - trigger: batch_2.complete
+    action: |
+      - Validate all backend modules compile
+      - Update SWARM_STATE.yaml
+      - Unblock batch 3
+
+  - trigger: batch_3.complete
+    action: |
+      - Validate all frontend components compile
+      - Update SWARM_STATE.yaml
+      - Proceed to batch 4 integration
+
+  - trigger: batch_4.complete
+    action: |
+      - Run full build verification
+      - Generate final HANDOFF.yaml
+      - Mark project complete
+
+mobile_responsiveness:
+  breakpoints:
+    small: "< 640px"
+    medium: "640px - 1024px"
+    large: "> 1024px"
+  requirements:
+    small:
+      - Card view with 1 column
+      - 44px minimum touch targets
+      - Hidden table columns
+    medium:
+      - Card view with 2 columns
+      - Condensed stats
+    large:
+      - Full table view
+      - All columns visible
