@@ -14,6 +14,7 @@ import { TokenStats } from '@/components/TokenStats';
 import { TradingLinks } from '@/components/TradingLinks';
 import { PriceChart } from '@/components/PriceChart';
 import { ChartTimeframeSelector } from '@/components/ChartTimeframeSelector';
+import { OfferHistory } from '@/components/OfferHistory';
 import { useChartData } from '@/hooks/useChartData';
 import { useWatchlist } from '@/hooks/useWatchlist';
 
@@ -106,6 +107,15 @@ export function TokenDetailClient({ token, xchPriceUsd }: TokenDetailClientProps
             {/* Trading Links */}
             <TradingLinks token={token} />
           </div>
+        </div>
+
+        {/* Offer History */}
+        <div className="mt-6">
+          <OfferHistory
+            tokenId={token.id}
+            tokenSymbol={token.symbol}
+            xchPriceUsd={xchPriceUsd}
+          />
         </div>
 
         {/* Additional info section */}
