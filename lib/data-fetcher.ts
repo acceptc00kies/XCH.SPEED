@@ -3,12 +3,13 @@
  *
  * Aggregates all data fetching into a single entry point.
  * Used by both server components and API routes.
- * Merges data from Dexie orderbook and TibetSwap AMM.
+ * Merges data from Dexie orderbook, TibetSwap AMM, and last trade prices.
  */
 
 import { DashboardData, Result } from '@/contracts/types';
 import { fetchAllDexieData } from './dexie-api';
 import { fetchTibetSwapPairs } from './tibetswap-api';
+import { fetchLastTradePrices } from './last-trade-prices';
 import { fetchXchUsdPrice } from './xch-price';
 import { mergeTokensAndMarkets } from './transform';
 
@@ -24,9 +25,10 @@ import { mergeTokensAndMarkets } from './transform';
 export async function fetchDashboardData(): Promise<Result<DashboardData>> {
   try {
     // Fetch all data in parallel
-    const [dexieData, tibetSwapResult, xchPriceResult] = await Promise.all([
+    const [dexieData, tibetSwapResult, lastTradePricesResult, xchPriceResult] = await Promise.all([
       fetchAllDexieData(),
       fetchTibetSwapPairs(),
+      fetchLastTradePrices(),
       fetchXchUsdPrice(),
     ]);
 
@@ -51,12 +53,16 @@ export async function fetchDashboardData(): Promise<Result<DashboardData>> {
     // TibetSwap is optional - use empty array if failed
     const tibetSwapPairs = tibetSwapResult.success ? tibetSwapResult.data : [];
 
+    // Last trade prices are optional - use empty map if failed
+    const lastTradePrices = lastTradePricesResult.success ? lastTradePricesResult.data : new Map();
+
     // Transform and merge data from all sources
     const tokens = mergeTokensAndMarkets(
       dexieData.tokens.data,
       dexieData.markets.data,
       xchPriceUsd,
-      tibetSwapPairs
+      tibetSwapPairs,
+      lastTradePrices
     );
 
     const dashboardData: DashboardData = {

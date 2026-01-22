@@ -7,6 +7,7 @@
 
 import { DexieToken, DexieMarket, DashboardToken } from '@/contracts/types';
 import { TibetSwapPair, calculatePriceFromReserves, calculateLiquidityXch } from './tibetswap-api';
+import { LastTradePrice } from './last-trade-prices';
 
 /**
  * Create a map of token ID to token data for fast lookups
@@ -165,15 +166,17 @@ function transformTibetSwapToken(
  *
  * @param tokens - Array of token metadata from /v1/tokens
  * @param markets - Array of market data from /v1/markets
- * @param tibetSwapPairs - Array of TibetSwap pairs (optional)
  * @param xchUsdPrice - Current XCH/USD exchange rate
+ * @param tibetSwapPairs - Array of TibetSwap pairs (optional)
+ * @param lastTradePrices - Map of token ID to last trade price (optional)
  * @returns Array of DashboardToken objects sorted by 7-day volume
  */
 export function mergeTokensAndMarkets(
   tokens: DexieToken[],
   markets: DexieMarket[],
   xchUsdPrice: number,
-  tibetSwapPairs: TibetSwapPair[] = []
+  tibetSwapPairs: TibetSwapPair[] = [],
+  lastTradePrices: Map<string, LastTradePrice> = new Map()
 ): DashboardToken[] {
   const tokenMap = createTokenMap(tokens);
   const marketMap = new Map<string, DexieMarket>();
@@ -210,31 +213,61 @@ export function mergeTokensAndMarkets(
     }
   }
 
-  // Finally, add remaining tokens WITHOUT any market data
+  // Finally, add remaining tokens - check for last trade prices first
   for (const token of tokens) {
     if (!processedIds.has(token.id)) {
-      dashboardTokens.push({
-        id: token.id,
-        symbol: token.code,
-        name: token.name,
-        iconUrl: token.icon || `https://icons.dexie.space/${token.id}.webp`,
-        priceXch: 0,
-        priceUsd: 0,
-        change24h: 0,
-        change7d: 0,
-        volume24hXch: 0,
-        volume24hUsd: 0,
-        volume7dXch: 0,
-        volume7dUsd: 0,
-        liquidityXch: 0,
-        liquidityUsd: 0,
-        high24h: 0,
-        low24h: 0,
-        pairId: '',
-        lastUpdated: new Date().toISOString(),
-        hasMarket: false,
-        priceSource: 'none',
-      });
+      // Check if we have a last trade price for this token
+      const lastTrade = lastTradePrices.get(token.id);
+
+      if (lastTrade && lastTrade.priceXch > 0) {
+        // Token has last trade price - use it
+        dashboardTokens.push({
+          id: token.id,
+          symbol: token.code,
+          name: token.name,
+          iconUrl: token.icon || `https://icons.dexie.space/${token.id}.webp`,
+          priceXch: lastTrade.priceXch,
+          priceUsd: lastTrade.priceXch * xchUsdPrice,
+          change24h: 0,
+          change7d: 0,
+          volume24hXch: 0,
+          volume24hUsd: 0,
+          volume7dXch: 0,
+          volume7dUsd: 0,
+          liquidityXch: 0,
+          liquidityUsd: 0,
+          high24h: 0,
+          low24h: 0,
+          pairId: '',
+          lastUpdated: lastTrade.date,
+          hasMarket: true, // Has market activity via last trade
+          priceSource: 'lastTrade',
+        });
+      } else {
+        // No market data at all
+        dashboardTokens.push({
+          id: token.id,
+          symbol: token.code,
+          name: token.name,
+          iconUrl: token.icon || `https://icons.dexie.space/${token.id}.webp`,
+          priceXch: 0,
+          priceUsd: 0,
+          change24h: 0,
+          change7d: 0,
+          volume24hXch: 0,
+          volume24hUsd: 0,
+          volume7dXch: 0,
+          volume7dUsd: 0,
+          liquidityXch: 0,
+          liquidityUsd: 0,
+          high24h: 0,
+          low24h: 0,
+          pairId: '',
+          lastUpdated: new Date().toISOString(),
+          hasMarket: false,
+          priceSource: 'none',
+        });
+      }
     }
   }
 

@@ -136,8 +136,8 @@ export interface DashboardToken {
   lastUpdated: string;
   /** Whether token has an active market (false = no trading data) */
   hasMarket?: boolean;
-  /** Price source: 'dexie' | 'tibetswap' | 'none' */
-  priceSource?: 'dexie' | 'tibetswap' | 'none';
+  /** Price source: 'dexie' | 'tibetswap' | 'lastTrade' | 'none' */
+  priceSource?: 'dexie' | 'tibetswap' | 'lastTrade' | 'none';
 }
 
 /**
