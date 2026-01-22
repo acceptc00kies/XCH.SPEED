@@ -111,20 +111,30 @@ export function TokenRow({
       </td>
 
       {/* Price XCH */}
-      <td className="px-4 py-4 text-right whitespace-nowrap tabular-nums text-text-primary">
-        {formatPrice(token.priceXch)} XCH
-      </td>
-
-      {/* Price USD */}
-      <td className="px-4 py-4 text-right whitespace-nowrap tabular-nums text-text-secondary">
-        {formatUsd(token.priceUsd)}
+      <td className="px-4 py-4 text-right whitespace-nowrap">
+        {token.hasMarket === false ? (
+          <span className="text-text-muted text-sm">No market</span>
+        ) : (
+          <div className="tabular-nums">
+            <div className="text-text-primary font-semibold">{formatPrice(token.priceXch)} XCH</div>
+            <div className="text-text-secondary text-sm">{formatUsd(token.priceUsd)}</div>
+          </div>
+        )}
       </td>
 
       {/* 24h Change */}
-      <ChangeCell value={token.change24h} />
+      {token.hasMarket === false ? (
+        <td className="px-4 py-4 text-right text-text-muted">-</td>
+      ) : (
+        <ChangeCell value={token.change24h} />
+      )}
 
       {/* 7d Change */}
-      <ChangeCell value={token.change7d} />
+      {token.hasMarket === false ? (
+        <td className="px-4 py-4 text-right text-text-muted">-</td>
+      ) : (
+        <ChangeCell value={token.change7d} />
+      )}
 
       {/* Volume 24h */}
       <td className="px-4 py-4 text-right whitespace-nowrap">

@@ -97,8 +97,15 @@ export function mergeTokensAndMarkets(
   xchUsdPrice: number
 ): DashboardToken[] {
   const tokenMap = createTokenMap(tokens);
+  const marketMap = new Map<string, DexieMarket>();
   const dashboardTokens: DashboardToken[] = [];
 
+  // Create market lookup map
+  for (const market of markets) {
+    marketMap.set(market.id, market);
+  }
+
+  // First, add all tokens that have market data
   for (const market of markets) {
     const transformed = transformMarket(market, tokenMap, xchUsdPrice);
     if (transformed) {
@@ -106,8 +113,40 @@ export function mergeTokensAndMarkets(
     }
   }
 
-  // Sort by 24h volume descending (most active first)
-  dashboardTokens.sort((a, b) => b.volume24hXch - a.volume24hXch);
+  // Then, add tokens WITHOUT market data (like TVL, NeckCoin, etc.)
+  for (const token of tokens) {
+    if (!marketMap.has(token.id)) {
+      // Token has no market - add with zero values
+      dashboardTokens.push({
+        id: token.id,
+        symbol: token.code,
+        name: token.name,
+        iconUrl: token.icon || `https://icons.dexie.space/${token.id}.webp`,
+        priceXch: 0,
+        priceUsd: 0,
+        change24h: 0,
+        change7d: 0,
+        volume24hXch: 0,
+        volume24hUsd: 0,
+        high24h: 0,
+        low24h: 0,
+        pairId: '',
+        lastUpdated: new Date().toISOString(),
+        hasMarket: false, // Flag to indicate no active market
+      });
+    }
+  }
+
+  // Sort: tokens with markets first (by volume), then tokens without markets (alphabetically)
+  dashboardTokens.sort((a, b) => {
+    const aHasMarket = (a as any).hasMarket !== false;
+    const bHasMarket = (b as any).hasMarket !== false;
+
+    if (aHasMarket && !bHasMarket) return -1;
+    if (!aHasMarket && bHasMarket) return 1;
+    if (aHasMarket && bHasMarket) return b.volume24hXch - a.volume24hXch;
+    return a.symbol.localeCompare(b.symbol);
+  });
 
   return dashboardTokens;
 }

@@ -121,15 +121,8 @@ export function TokenTable({
               />
             </th>
             <SortableHeader
-              label="Price (XCH)"
+              label="Price"
               field="priceXch"
-              currentField={sortConfig.field}
-              direction={sortConfig.direction}
-              onClick={onSortChange}
-            />
-            <SortableHeader
-              label="Price (USD)"
-              field="priceUsd"
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}

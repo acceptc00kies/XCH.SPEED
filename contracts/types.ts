@@ -126,6 +126,8 @@ export interface DashboardToken {
   pairId: string;
   /** Timestamp when this data was fetched */
   lastUpdated: string;
+  /** Whether token has an active market (false = no trading data) */
+  hasMarket?: boolean;
 }
 
 /**

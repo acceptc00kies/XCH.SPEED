@@ -27,7 +27,7 @@ import { FilterPanel } from './FilterPanel';
 import { PaginationControls } from './PaginationControls';
 import { ViewModeSwitcher } from './ViewModeSwitcher';
 import { TokenGrid } from './TokenGrid';
-import { TrendingSection } from './TrendingSection';
+import { TrendingBanner } from './TrendingSection';
 import { MobileNav } from './MobileNav';
 
 interface DashboardProps {
@@ -162,24 +162,12 @@ export function Dashboard({ initialData }: DashboardProps) {
           onRequestPermission={requestPermission}
         />
 
-        {/* Trending Sections */}
-        <div className="mb-8">
-          <TrendingSection
-            title="Trending"
-            tokens={trendingData.trending}
-            type="trending"
-          />
-          <TrendingSection
-            title="Weekly Gainers"
-            tokens={trendingData.gainers}
-            type="gainers"
-          />
-          <TrendingSection
-            title="Weekly Losers"
-            tokens={trendingData.losers}
-            type="losers"
-          />
-        </div>
+        {/* Trending Banner */}
+        <TrendingBanner
+          trending={trendingData.trending}
+          gainers={trendingData.gainers}
+          losers={trendingData.losers}
+        />
 
         {/* Controls Bar */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
