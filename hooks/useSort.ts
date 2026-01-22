@@ -10,7 +10,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { DashboardToken, SortConfig, SortField, UseSortResult } from '@/contracts/types';
 
 const DEFAULT_SORT_CONFIG: SortConfig = {
-  field: 'volume24hXch',
+  field: 'volume7dXch',
   direction: 'desc',
 };
 
@@ -61,6 +61,22 @@ export function useSort(
         case 'volume24hUsd':
           aValue = a.volume24hUsd;
           bValue = b.volume24hUsd;
+          break;
+        case 'volume7dXch':
+          aValue = a.volume7dXch;
+          bValue = b.volume7dXch;
+          break;
+        case 'volume7dUsd':
+          aValue = a.volume7dUsd;
+          bValue = b.volume7dUsd;
+          break;
+        case 'liquidityXch':
+          aValue = a.liquidityXch;
+          bValue = b.liquidityXch;
+          break;
+        case 'liquidityUsd':
+          aValue = a.liquidityUsd;
+          bValue = b.liquidityUsd;
           break;
         default:
           return 0;

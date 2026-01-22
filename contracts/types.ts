@@ -118,6 +118,14 @@ export interface DashboardToken {
   volume24hXch: number;
   /** 24-hour trading volume in USD */
   volume24hUsd: number;
+  /** 7-day trading volume in XCH */
+  volume7dXch: number;
+  /** 7-day trading volume in USD */
+  volume7dUsd: number;
+  /** Liquidity in XCH (combined bid/ask depth) */
+  liquidityXch: number;
+  /** Liquidity in USD */
+  liquidityUsd: number;
   /** 24-hour high price in XCH */
   high24h: number;
   /** 24-hour low price in XCH */
@@ -128,6 +136,8 @@ export interface DashboardToken {
   lastUpdated: string;
   /** Whether token has an active market (false = no trading data) */
   hasMarket?: boolean;
+  /** Price source: 'dexie' | 'tibetswap' | 'none' */
+  priceSource?: 'dexie' | 'tibetswap' | 'none';
 }
 
 /**
@@ -164,7 +174,11 @@ export type SortField =
   | 'change24h'
   | 'change7d'
   | 'volume24hXch'
-  | 'volume24hUsd';
+  | 'volume24hUsd'
+  | 'volume7dXch'
+  | 'volume7dUsd'
+  | 'liquidityXch'
+  | 'liquidityUsd';
 
 /**
  * Filter configuration

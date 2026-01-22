@@ -142,15 +142,29 @@ export function TokenTable({
               onClick={onSortChange}
             />
             <SortableHeader
-              label="Volume (24h)"
+              label="Vol (24h)"
               field="volume24hXch"
+              currentField={sortConfig.field}
+              direction={sortConfig.direction}
+              onClick={onSortChange}
+            />
+            <SortableHeader
+              label="Vol (7d)"
+              field="volume7dXch"
+              currentField={sortConfig.field}
+              direction={sortConfig.direction}
+              onClick={onSortChange}
+            />
+            <SortableHeader
+              label="Liquidity"
+              field="liquidityXch"
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}
             />
             {/* Last 7 Days Sparkline */}
             <th className="px-4 py-3 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
-              Last 7 Days
+              7d Chart
             </th>
             {/* Watchlist */}
             {onToggleWatchlist && (

@@ -141,7 +141,21 @@ export function TokenRow({
         <div className="tabular-nums text-text-primary">
           {formatVolume(token.volume24hXch)} XCH
         </div>
-        <div className="text-sm text-text-muted tabular-nums">{formatUsd(token.volume24hUsd)}</div>
+      </td>
+
+      {/* Volume 7d */}
+      <td className="px-4 py-4 text-right whitespace-nowrap">
+        <div className="tabular-nums text-text-primary">
+          {formatVolume(token.volume7dXch)} XCH
+        </div>
+      </td>
+
+      {/* Liquidity */}
+      <td className="px-4 py-4 text-right whitespace-nowrap">
+        <div className="tabular-nums text-text-primary">
+          {formatVolume(token.liquidityXch)} XCH
+        </div>
+        <div className="text-sm text-text-muted tabular-nums">{formatUsd(token.liquidityUsd)}</div>
       </td>
 
       {/* Last 7 Days Sparkline */}

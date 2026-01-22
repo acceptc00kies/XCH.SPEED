@@ -2,9 +2,11 @@
  * Data Transformation Layer
  *
  * Transforms raw API responses into unified dashboard format.
+ * Merges data from Dexie orderbook and TibetSwap AMM.
  */
 
 import { DexieToken, DexieMarket, DashboardToken } from '@/contracts/types';
+import { TibetSwapPair, calculatePriceFromReserves, calculateLiquidityXch } from './tibetswap-api';
 
 /**
  * Create a map of token ID to token data for fast lookups
@@ -28,22 +30,37 @@ function safeNumber(value: unknown, fallback = 0): number {
 }
 
 /**
+ * Calculate total liquidity from bid/ask arrays
+ */
+function calculateDexieLiquidity(liquidity: { ask: number[]; bid: number[] } | undefined): number {
+  if (!liquidity) return 0;
+
+  // Sum the deepest liquidity level from both sides
+  const maxAsk = liquidity.ask?.length > 0 ? Math.max(...liquidity.ask) : 0;
+  const maxBid = liquidity.bid?.length > 0 ? Math.max(...liquidity.bid) : 0;
+
+  return maxAsk + maxBid;
+}
+
+/**
  * Transform a single market entry into a DashboardToken
  */
 function transformMarket(
   market: DexieMarket,
   tokenMap: Map<string, DexieToken>,
-  xchUsdPrice: number
+  xchUsdPrice: number,
+  tibetSwapMap: Map<string, TibetSwapPair>
 ): DashboardToken | null {
   // Find matching token metadata
   const token = tokenMap.get(market.id);
+  const tibetPair = tibetSwapMap.get(market.id);
 
   // Use market data if token metadata is missing
   const symbol = token?.code || market.code || 'UNKNOWN';
   const name = token?.name || market.name || 'Unknown Token';
   const iconUrl = token?.icon || `https://icons.dexie.space/${market.id}.webp`;
 
-  // Extract price data
+  // Extract price data from Dexie
   const priceXch = safeNumber(market.prices?.last?.price);
 
   // Skip tokens with no price data
@@ -57,9 +74,19 @@ function transformMarket(
   const change24h = safeNumber(market.prices?.last?.change?.daily) * 100;
   const change7d = safeNumber(market.prices?.last?.change?.weekly) * 100;
 
-  // Extract volume data
+  // Extract volume data (24h and 7d)
   const volume24hXch = safeNumber(market.volume?.xch?.daily);
   const volume24hUsd = volume24hXch * xchUsdPrice;
+  const volume7dXch = safeNumber(market.volume?.xch?.weekly);
+  const volume7dUsd = volume7dXch * xchUsdPrice;
+
+  // Calculate liquidity - prefer TibetSwap if available, else use Dexie orderbook
+  let liquidityXch = calculateDexieLiquidity(market.liquidity);
+  if (tibetPair) {
+    const tibetLiquidity = calculateLiquidityXch(tibetPair.xch_reserve);
+    liquidityXch = Math.max(liquidityXch, tibetLiquidity);
+  }
+  const liquidityUsd = liquidityXch * xchUsdPrice;
 
   // Extract high/low
   const high24h = safeNumber(market.prices?.high?.daily);
@@ -76,10 +103,60 @@ function transformMarket(
     change7d,
     volume24hXch,
     volume24hUsd,
+    volume7dXch,
+    volume7dUsd,
+    liquidityXch,
+    liquidityUsd,
     high24h,
     low24h,
     pairId: market.pair_id || '',
     lastUpdated: new Date().toISOString(),
+    priceSource: 'dexie',
+  };
+}
+
+/**
+ * Transform a TibetSwap-only token into a DashboardToken
+ */
+function transformTibetSwapToken(
+  pair: TibetSwapPair,
+  token: DexieToken | undefined,
+  xchUsdPrice: number
+): DashboardToken {
+  const symbol = token?.code || pair.asset_short_name || 'UNKNOWN';
+  const name = token?.name || pair.asset_name || 'Unknown Token';
+  const iconUrl = token?.icon || pair.asset_image_url || `https://icons.dexie.space/${pair.asset_id}.webp`;
+  const tokenDenom = token?.denom || 1000;
+
+  // Calculate price from reserves
+  const priceXch = calculatePriceFromReserves(pair.xch_reserve, pair.token_reserve, tokenDenom);
+  const priceUsd = priceXch * xchUsdPrice;
+
+  // Calculate liquidity
+  const liquidityXch = calculateLiquidityXch(pair.xch_reserve);
+  const liquidityUsd = liquidityXch * xchUsdPrice;
+
+  return {
+    id: pair.asset_id,
+    symbol,
+    name,
+    iconUrl,
+    priceXch,
+    priceUsd,
+    change24h: 0, // TibetSwap doesn't provide change data
+    change7d: 0,
+    volume24hXch: 0, // TibetSwap doesn't provide volume directly
+    volume24hUsd: 0,
+    volume7dXch: 0,
+    volume7dUsd: 0,
+    liquidityXch,
+    liquidityUsd,
+    high24h: 0,
+    low24h: 0,
+    pairId: pair.pair_id,
+    lastUpdated: new Date().toISOString(),
+    hasMarket: true,
+    priceSource: 'tibetswap',
   };
 }
 
@@ -88,35 +165,54 @@ function transformMarket(
  *
  * @param tokens - Array of token metadata from /v1/tokens
  * @param markets - Array of market data from /v1/markets
+ * @param tibetSwapPairs - Array of TibetSwap pairs (optional)
  * @param xchUsdPrice - Current XCH/USD exchange rate
- * @returns Array of DashboardToken objects sorted by volume
+ * @returns Array of DashboardToken objects sorted by 7-day volume
  */
 export function mergeTokensAndMarkets(
   tokens: DexieToken[],
   markets: DexieMarket[],
-  xchUsdPrice: number
+  xchUsdPrice: number,
+  tibetSwapPairs: TibetSwapPair[] = []
 ): DashboardToken[] {
   const tokenMap = createTokenMap(tokens);
   const marketMap = new Map<string, DexieMarket>();
+  const tibetSwapMap = new Map<string, TibetSwapPair>();
   const dashboardTokens: DashboardToken[] = [];
+  const processedIds = new Set<string>();
 
-  // Create market lookup map
+  // Create lookup maps
   for (const market of markets) {
     marketMap.set(market.id, market);
   }
+  for (const pair of tibetSwapPairs) {
+    tibetSwapMap.set(pair.asset_id, pair);
+  }
 
-  // First, add all tokens that have market data
+  // First, add all tokens that have Dexie market data
   for (const market of markets) {
-    const transformed = transformMarket(market, tokenMap, xchUsdPrice);
+    const transformed = transformMarket(market, tokenMap, xchUsdPrice, tibetSwapMap);
     if (transformed) {
       dashboardTokens.push(transformed);
+      processedIds.add(market.id);
     }
   }
 
-  // Then, add tokens WITHOUT market data (like TVL, NeckCoin, etc.)
+  // Second, add tokens that have TibetSwap liquidity but no Dexie market
+  for (const pair of tibetSwapPairs) {
+    if (!processedIds.has(pair.asset_id)) {
+      const token = tokenMap.get(pair.asset_id);
+      const transformed = transformTibetSwapToken(pair, token, xchUsdPrice);
+      if (transformed.priceXch > 0) {
+        dashboardTokens.push(transformed);
+        processedIds.add(pair.asset_id);
+      }
+    }
+  }
+
+  // Finally, add remaining tokens WITHOUT any market data
   for (const token of tokens) {
-    if (!marketMap.has(token.id)) {
-      // Token has no market - add with zero values
+    if (!processedIds.has(token.id)) {
       dashboardTokens.push({
         id: token.id,
         symbol: token.code,
@@ -128,23 +224,28 @@ export function mergeTokensAndMarkets(
         change7d: 0,
         volume24hXch: 0,
         volume24hUsd: 0,
+        volume7dXch: 0,
+        volume7dUsd: 0,
+        liquidityXch: 0,
+        liquidityUsd: 0,
         high24h: 0,
         low24h: 0,
         pairId: '',
         lastUpdated: new Date().toISOString(),
-        hasMarket: false, // Flag to indicate no active market
+        hasMarket: false,
+        priceSource: 'none',
       });
     }
   }
 
-  // Sort: tokens with markets first (by volume), then tokens without markets (alphabetically)
+  // Sort by 7-day volume (high to low), then tokens without markets alphabetically
   dashboardTokens.sort((a, b) => {
-    const aHasMarket = (a as any).hasMarket !== false;
-    const bHasMarket = (b as any).hasMarket !== false;
+    const aHasMarket = a.hasMarket !== false;
+    const bHasMarket = b.hasMarket !== false;
 
     if (aHasMarket && !bHasMarket) return -1;
     if (!aHasMarket && bHasMarket) return 1;
-    if (aHasMarket && bHasMarket) return b.volume24hXch - a.volume24hXch;
+    if (aHasMarket && bHasMarket) return b.volume7dXch - a.volume7dXch;
     return a.symbol.localeCompare(b.symbol);
   });
 
