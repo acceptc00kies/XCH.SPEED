@@ -9,26 +9,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Dark theme color palette
+        // Dark theme color palette - UI Overhaul
         background: {
-          primary: '#0d1117',
-          secondary: '#161b22',
-          tertiary: '#21262d',
+          primary: '#0a0a0f',
+          secondary: '#12121a',
+          tertiary: '#1a1a24',
         },
         border: {
-          primary: '#30363d',
-          secondary: '#21262d',
+          primary: '#1e1e2e',
+          secondary: '#2a2a3a',
         },
         text: {
-          primary: '#f0f6fc',
-          secondary: '#8b949e',
-          muted: '#6e7681',
+          primary: '#ffffff',
+          secondary: '#a0a0b0',
+          muted: '#6b6b7b',
         },
         accent: {
-          green: '#3fb950',
-          red: '#f85149',
-          blue: '#58a6ff',
-          yellow: '#d29922',
+          blue: '#3b82f6',
+          green: '#22c55e',
+          red: '#ef4444',
+          yellow: '#eab308',
         },
       },
       fontFamily: {

@@ -5,10 +5,10 @@
  *
  * Main client-side dashboard that handles all interactive state.
  * Receives initial data from server component and manages live updates.
- * Integrates filters, pagination, view modes, and watchlist.
+ * Integrates filters, pagination, view modes, watchlist, and trending sections.
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import { DashboardData, DashboardToken, ViewMode } from '@/contracts/types';
 import { usePolling, useAlerts, useSearch, useSort } from '@/hooks';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -27,6 +27,8 @@ import { FilterPanel } from './FilterPanel';
 import { PaginationControls } from './PaginationControls';
 import { ViewModeSwitcher } from './ViewModeSwitcher';
 import { TokenGrid } from './TokenGrid';
+import { TrendingSection } from './TrendingSection';
+import { MobileNav } from './MobileNav';
 
 interface DashboardProps {
   initialData: DashboardData;
@@ -99,6 +101,30 @@ export function Dashboard({ initialData }: DashboardProps) {
     }
   }, [initialData]);
 
+  // Calculate trending sections data
+  const trendingData = useMemo(() => {
+    const tokens = data?.tokens ?? [];
+
+    // Trending: Top 5 by 24h volume
+    const trending = [...tokens]
+      .sort((a, b) => b.volume24hXch - a.volume24hXch)
+      .slice(0, 5);
+
+    // Weekly Gainers: Top 5 by positive 7d change
+    const gainers = [...tokens]
+      .filter((t) => t.change7d > 0)
+      .sort((a, b) => b.change7d - a.change7d)
+      .slice(0, 5);
+
+    // Weekly Losers: Top 5 by negative 7d change
+    const losers = [...tokens]
+      .filter((t) => t.change7d < 0)
+      .sort((a, b) => a.change7d - b.change7d)
+      .slice(0, 5);
+
+    return { trending, gainers, losers };
+  }, [data?.tokens]);
+
   // Apply advanced filters first
   const filteredByAdvanced = applyFilters(data?.tokens ?? [], watchlist);
 
@@ -126,7 +152,7 @@ export function Dashboard({ initialData }: DashboardProps) {
   const startRank = (pagination.currentPage - 1) * pagination.pageSize + 1;
 
   return (
-    <div className="min-h-screen bg-background-primary">
+    <div className="min-h-screen bg-background-primary pb-20 lg:pb-0">
       <Header xchPriceUsd={data?.xchPriceUsd ?? 0} />
 
       <main className="container mx-auto px-4 py-6">
@@ -135,6 +161,25 @@ export function Dashboard({ initialData }: DashboardProps) {
           permission={permission}
           onRequestPermission={requestPermission}
         />
+
+        {/* Trending Sections */}
+        <div className="mb-8">
+          <TrendingSection
+            title="Trending"
+            tokens={trendingData.trending}
+            type="trending"
+          />
+          <TrendingSection
+            title="Weekly Gainers"
+            tokens={trendingData.gainers}
+            type="gainers"
+          />
+          <TrendingSection
+            title="Weekly Losers"
+            tokens={trendingData.losers}
+            type="losers"
+          />
+        </div>
 
         {/* Controls Bar */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
@@ -149,7 +194,7 @@ export function Dashboard({ initialData }: DashboardProps) {
             <button
               onClick={refresh}
               disabled={isLoading}
-              className="p-2.5 bg-background-secondary border border-border-primary rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-3 bg-background-secondary border border-border-primary rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Refresh data"
             >
               <svg
@@ -196,25 +241,25 @@ export function Dashboard({ initialData }: DashboardProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-background-secondary border border-border-primary rounded-lg p-4">
             <div className="text-sm text-text-muted">Total Tokens</div>
-            <div className="text-2xl font-bold text-text-primary">
+            <div className="text-2xl font-bold text-text-primary tabular-nums">
               {data?.tokens.length ?? 0}
             </div>
           </div>
           <div className="bg-background-secondary border border-border-primary rounded-lg p-4">
             <div className="text-sm text-text-muted">Showing</div>
-            <div className="text-2xl font-bold text-text-primary">
+            <div className="text-2xl font-bold text-text-primary tabular-nums">
               {sortedTokens.length}
             </div>
           </div>
           <div className="bg-background-secondary border border-border-primary rounded-lg p-4">
             <div className="text-sm text-text-muted">Watchlist</div>
-            <div className="text-2xl font-bold text-accent-yellow">
+            <div className="text-2xl font-bold text-accent-yellow tabular-nums">
               {watchlist.length}
             </div>
           </div>
           <div className="bg-background-secondary border border-border-primary rounded-lg p-4">
             <div className="text-sm text-text-muted">Alerts Active</div>
-            <div className="text-2xl font-bold text-accent-blue">
+            <div className="text-2xl font-bold text-accent-blue tabular-nums">
               {enabledTokens.size}
             </div>
           </div>
@@ -301,6 +346,9 @@ export function Dashboard({ initialData }: DashboardProps) {
           <p className="mt-1">Prices update automatically every 30 seconds</p>
         </footer>
       </main>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
     </div>
   );
 }

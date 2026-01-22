@@ -4,7 +4,8 @@
  * TokenTable Component
  *
  * Main table displaying all tokens with sorting capability.
- * Responsive columns that hide on smaller screens.
+ * Shows ALL columns on all screen sizes with horizontal scroll.
+ * Features sticky first column (token name) and Last 7 Days sparkline.
  */
 
 import { DashboardToken, SortConfig, SortField } from '@/contracts/types';
@@ -45,7 +46,7 @@ function SortableHeader({
 
   return (
     <th
-      className={`px-4 py-3 text-${align} text-sm font-semibold text-text-secondary cursor-pointer hover:text-text-primary transition-colors select-none ${className}`}
+      className={`px-4 py-3 text-${align} text-sm font-semibold text-text-secondary cursor-pointer hover:text-text-primary transition-colors select-none whitespace-nowrap ${className}`}
       onClick={() => onClick(field)}
     >
       <div
@@ -100,20 +101,25 @@ export function TokenTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[500px]">
-        <thead className="bg-background-tertiary border-b border-border-primary sticky top-0">
+      <table className="w-full min-w-[900px]">
+        <thead className="bg-background-tertiary border-b border-border-primary">
           <tr>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary w-12">
+            {/* Rank - Sticky */}
+            <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary w-12 sticky left-0 bg-background-tertiary z-10">
               #
             </th>
-            <SortableHeader
-              label="Token"
-              field="name"
-              currentField={sortConfig.field}
-              direction={sortConfig.direction}
-              onClick={onSortChange}
-              align="left"
-            />
+            {/* Token - Sticky */}
+            <th className="px-4 py-3 text-left text-sm font-semibold text-text-secondary sticky left-12 bg-background-tertiary z-10 min-w-[180px]">
+              <SortableHeader
+                label="Token"
+                field="name"
+                currentField={sortConfig.field}
+                direction={sortConfig.direction}
+                onClick={onSortChange}
+                align="left"
+                className="!px-0"
+              />
+            </th>
             <SortableHeader
               label="Price (XCH)"
               field="priceXch"
@@ -127,7 +133,6 @@ export function TokenTable({
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}
-              className="hidden sm:table-cell"
             />
             <SortableHeader
               label="24h %"
@@ -135,7 +140,6 @@ export function TokenTable({
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}
-              className="hidden md:table-cell"
             />
             <SortableHeader
               label="7d %"
@@ -143,7 +147,6 @@ export function TokenTable({
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}
-              className="hidden lg:table-cell"
             />
             <SortableHeader
               label="Volume (24h)"
@@ -151,10 +154,14 @@ export function TokenTable({
               currentField={sortConfig.field}
               direction={sortConfig.direction}
               onClick={onSortChange}
-              className="hidden md:table-cell"
             />
+            {/* Last 7 Days Sparkline */}
+            <th className="px-4 py-3 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
+              Last 7 Days
+            </th>
+            {/* Watchlist */}
             {onToggleWatchlist && (
-              <th className="px-2 py-3 text-center text-sm font-semibold text-text-secondary w-12 hidden sm:table-cell">
+              <th className="px-2 py-3 text-center text-sm font-semibold text-text-secondary w-12">
                 <svg
                   className="h-4 w-4 mx-auto text-text-muted"
                   xmlns="http://www.w3.org/2000/svg"
@@ -165,6 +172,7 @@ export function TokenTable({
                 </svg>
               </th>
             )}
+            {/* Alerts */}
             <th className="px-2 py-3 text-center text-sm font-semibold text-text-secondary w-12">
               <svg
                 className="h-4 w-4 mx-auto text-text-muted"

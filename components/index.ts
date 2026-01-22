@@ -32,3 +32,15 @@ export { TradingLinks } from './TradingLinks';
 // Chart components
 export { PriceChart } from './PriceChart';
 export { ChartTimeframeSelector } from './ChartTimeframeSelector';
+
+// New UI components
+export { Sparkline } from './Sparkline';
+export { TrendingSection } from './TrendingSection';
+export { MobileNav } from './MobileNav';
+export {
+  TableRowSkeleton,
+  CardSkeleton,
+  ChartSkeleton,
+  TrendingSectionSkeleton,
+  StatCardSkeleton,
+} from './Skeleton';

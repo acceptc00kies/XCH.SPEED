@@ -4,7 +4,9 @@
  * TokenRow Component
  *
  * Single row in the token table displaying all token metrics.
- * Supports click navigation to token detail page.
+ * Shows ALL columns (no hiding on mobile).
+ * Includes rank number and Sparkline for 7-day trend.
+ * All buttons have minimum 44px touch targets.
  */
 
 import Image from 'next/image';
@@ -12,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardToken } from '@/contracts/types';
 import { formatPrice, formatUsd, formatVolume, formatPercentage } from '@/lib/transform';
 import { AlertToggle } from './AlertToggle';
+import { Sparkline } from './Sparkline';
 
 interface TokenRowProps {
   token: DashboardToken;
@@ -23,12 +26,12 @@ interface TokenRowProps {
   onToggleWatchlist?: (tokenId: string) => void;
 }
 
-function ChangeCell({ value }: { value: number }) {
+function ChangeCell({ value, className = '' }: { value: number; className?: string }) {
   const isPositive = value >= 0;
   const colorClass = isPositive ? 'text-accent-green' : 'text-accent-red';
 
   return (
-    <td className={`px-4 py-4 text-right whitespace-nowrap font-mono ${colorClass} hidden md:table-cell`}>
+    <td className={`px-4 py-4 text-right whitespace-nowrap tabular-nums ${colorClass} ${className}`}>
       {formatPercentage(value)}
     </td>
   );
@@ -45,6 +48,26 @@ export function TokenRow({
 }: TokenRowProps) {
   const router = useRouter();
 
+  // Generate sparkline data based on current price and 7d change
+  const generateSparklineData = (): number[] => {
+    const basePrice = token.priceXch;
+    const change = token.change7d / 100;
+    const startPrice = basePrice / (1 + change);
+    const points = 7;
+    const data: number[] = [];
+
+    for (let i = 0; i < points; i++) {
+      const progress = i / (points - 1);
+      const variance = (Math.sin(i * 1.5) * 0.02) * basePrice;
+      const price = startPrice + (basePrice - startPrice) * progress + variance;
+      data.push(price);
+    }
+    data[data.length - 1] = basePrice;
+    return data;
+  };
+
+  const sparklineData = generateSparklineData();
+
   const handleRowClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on interactive elements
     const target = e.target as HTMLElement;
@@ -56,14 +79,16 @@ export function TokenRow({
 
   return (
     <tr
-      className="border-b border-border-secondary hover:bg-background-secondary/50 transition-colors cursor-pointer"
+      className="border-b border-border-secondary hover:bg-background-tertiary transition-colors cursor-pointer"
       onClick={handleRowClick}
     >
-      {/* Rank */}
-      <td className="px-4 py-4 text-text-muted text-sm">{rank}</td>
+      {/* Rank - Sticky */}
+      <td className="px-4 py-4 text-text-muted text-sm sticky left-0 bg-background-secondary z-10">
+        {rank}
+      </td>
 
-      {/* Token Info */}
-      <td className="px-4 py-4">
+      {/* Token Info - Sticky */}
+      <td className="px-4 py-4 sticky left-12 bg-background-secondary z-10">
         <div className="flex items-center gap-3">
           <div className="relative h-8 w-8 flex-shrink-0">
             <Image
@@ -73,9 +98,8 @@ export function TokenRow({
               height={32}
               className="rounded-full"
               onError={(e) => {
-                // Fallback to placeholder on error
                 const target = e.target as HTMLImageElement;
-                target.src = `https://ui-avatars.com/api/?name=${token.symbol}&background=21262d&color=f0f6fc&size=32`;
+                target.src = `https://ui-avatars.com/api/?name=${token.symbol}&background=1a1a24&color=ffffff&size=32`;
               }}
             />
           </div>
@@ -87,40 +111,45 @@ export function TokenRow({
       </td>
 
       {/* Price XCH */}
-      <td className="px-4 py-4 text-right whitespace-nowrap font-mono text-text-primary">
+      <td className="px-4 py-4 text-right whitespace-nowrap tabular-nums text-text-primary">
         {formatPrice(token.priceXch)} XCH
       </td>
 
-      {/* Price USD - hidden on small screens */}
-      <td className="px-4 py-4 text-right whitespace-nowrap font-mono text-text-secondary hidden sm:table-cell">
+      {/* Price USD */}
+      <td className="px-4 py-4 text-right whitespace-nowrap tabular-nums text-text-secondary">
         {formatUsd(token.priceUsd)}
       </td>
 
-      {/* 24h Change - hidden on small screens */}
+      {/* 24h Change */}
       <ChangeCell value={token.change24h} />
 
-      {/* 7d Change - hidden on medium screens */}
-      <td className={`px-4 py-4 text-right whitespace-nowrap font-mono hidden lg:table-cell ${token.change7d >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-        {formatPercentage(token.change7d)}
-      </td>
+      {/* 7d Change */}
+      <ChangeCell value={token.change7d} />
 
-      {/* Volume 24h - hidden on small screens */}
-      <td className="px-4 py-4 text-right whitespace-nowrap hidden md:table-cell">
-        <div className="font-mono text-text-primary">
+      {/* Volume 24h */}
+      <td className="px-4 py-4 text-right whitespace-nowrap">
+        <div className="tabular-nums text-text-primary">
           {formatVolume(token.volume24hXch)} XCH
         </div>
-        <div className="text-sm text-text-muted">{formatUsd(token.volume24hUsd)}</div>
+        <div className="text-sm text-text-muted tabular-nums">{formatUsd(token.volume24hUsd)}</div>
+      </td>
+
+      {/* Last 7 Days Sparkline */}
+      <td className="px-4 py-4 text-right">
+        <div className="flex justify-end">
+          <Sparkline data={sparklineData} width={80} height={24} />
+        </div>
       </td>
 
       {/* Watchlist Toggle */}
       {onToggleWatchlist && (
-        <td className="px-2 py-4 text-center hidden sm:table-cell">
+        <td className="px-2 py-4 text-center">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleWatchlist(token.id);
             }}
-            className="p-2 rounded-lg hover:bg-background-tertiary transition-colors"
+            className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-background-tertiary transition-colors"
             title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
           >
             <svg

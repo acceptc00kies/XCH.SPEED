@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
+
+// Configure Inter font with all weights needed
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'XCH Dashboard | Chia Asset Tokens',
@@ -18,7 +26,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0d1117',
+  themeColor: '#0a0a0f',
 };
 
 export default function RootLayout({
@@ -27,13 +35,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${inter.variable}`}>
       <head>
         <link rel="preconnect" href="https://api.dexie.space" />
         <link rel="preconnect" href="https://icons.dexie.space" />
         <link rel="dns-prefetch" href="https://api.coingecko.com" />
       </head>
-      <body className="bg-background-primary text-text-primary antialiased">
+      <body className={`${inter.className} bg-background-primary text-text-primary antialiased`}>
         {children}
       </body>
     </html>
