@@ -2,6 +2,16 @@
 
 A fast-loading Chia Asset Token (CAT) dashboard displaying real-time market data from [Dexie DEX](https://dexie.space).
 
+## Standards
+
+This project follows [acceptc00kies/master-guidance](https://github.com/acceptc00kies/master-guidance)
+
+## Documentation
+
+- [Build History](docs/BUILD_HISTORY.md) - How this project was built, with reasoning
+- [Architecture](docs/ARCHITECTURE.md) - System design
+- [Scope](docs/SCOPE.md) - Project scope
+
 ## Features
 
 - **Instant Load** - Server-side data fetching with ISR, no loading spinners on initial visit
